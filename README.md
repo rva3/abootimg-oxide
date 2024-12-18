@@ -11,6 +11,26 @@ documentation about the layout of boot images!
 
 TODO: reimplement mkbootimg
 
+## Examples
+
+```rs
+use std::fs::File;
+use abootimg_oxide::{BufReader, Header};
+
+let mut r = BufReader::new(File::open("boot_a.img").unwrap());
+let hdr = Header::parse(&mut r).unwrap();
+println!("{hdr:#?}");
+
+// Extract the kernel
+use std::io::{self, BufWriter, Read, Seek, SeekFrom};
+
+let mut w = BufWriter::new(File::create("boot_a_kernel").unwrap());
+let r = r.get_mut();
+r.seek(SeekFrom::Start(hdr.kernel_position() as u64))
+    .unwrap();
+io::copy(&mut r.take(hdr.kernel_size() as u64), w.get_mut()).unwrap();
+```
+
 ## License
 
 Licensed under either of
