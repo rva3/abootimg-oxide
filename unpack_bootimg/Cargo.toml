@@ -1,6 +1,8 @@
 [package]
 name = "unpack_bootimg"
 edition = "2021"
+description = "Reimplementation of AOSP's `unpack_bootimg` in Rust using abootimg-oxide"
+
 version.workspace = true
 authors.workspace = true
 repository.workspace = true

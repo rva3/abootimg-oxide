@@ -7,7 +7,6 @@ use std::{
 use abootimg_oxide::{Header, HeaderV0Versioned};
 use clap::{Parser, ValueEnum};
 
-/// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
