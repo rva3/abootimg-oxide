@@ -4,6 +4,10 @@ use binrw::{BinRead, BinWrite};
 
 /// OS version and patch level
 ///
+/// # Warning
+///
+/// Please note that the version information may be incorrect, for example, on OnePlus devices.
+///
 /// # Bitwise format
 ///
 /// * 7 bits indicate first part of version
@@ -73,6 +77,10 @@ impl fmt::Debug for OsPatch {
 }
 
 /// OS version
+///
+/// # Warning
+///
+/// Please note that this information may be incorrect, for example, on OnePlus devices.
 ///
 /// # Bitwise format
 ///

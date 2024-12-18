@@ -11,7 +11,7 @@ use clap::{Parser, ValueEnum};
 #[command(version, about, long_about = None)]
 struct Args {
     /// Path to the boot, recovery or vendor_boot image
-    #[arg(long = "boot_img")]
+    #[arg(long = "boot_img", value_name = "FILE")]
     boot_img: PathBuf,
 
     /// Output directory of the unpacked images
