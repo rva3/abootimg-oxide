@@ -137,9 +137,9 @@ fn main() {
                     print!("product name: ");
                     print_null_bytestring(&v0.board_name);
                     print!("\ncommand line args: ");
-                    print_null_bytestring(&*v0.cmdline_part_1);
+                    print_null_bytestring(&v0.cmdline[..512]);
                     print!("\nadditional command line args: ");
-                    print_null_bytestring(&*v0.cmdline_part_2);
+                    print_null_bytestring(&v0.cmdline[512..]);
                     println!();
                     match v0.versioned {
                         HeaderV0Versioned::V1 {
@@ -167,7 +167,7 @@ fn main() {
                 }
                 Header::V3(v3) => {
                     print!("command line args: ");
-                    print_null_bytestring(&*v3.cmdline);
+                    print_null_bytestring(v3.cmdline.as_slice());
                     println!();
                     if let Some(signature_size) = v3.v4_signature_size {
                         println!("boot.img signature size: {signature_size}");
@@ -245,12 +245,10 @@ fn main() {
                     print_escaped_null_bytestring(&v0.board_name);
                 }
                 print!("{sep}--cmdline{sep}");
-                let mut cmdline = v0.cmdline_part_1.to_vec();
-                cmdline.extend_from_slice(&*v0.cmdline_part_2);
                 if args.null {
-                    print_null_bytestring(&cmdline);
+                    print_null_bytestring(v0.cmdline.as_slice());
                 } else {
-                    print_escaped_null_bytestring(&cmdline);
+                    print_escaped_null_bytestring(v0.cmdline.as_slice());
                 }
             }
             if args.null {

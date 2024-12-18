@@ -89,17 +89,23 @@ pub struct HeaderV0 {
     pub osversionpatch: OsVersionPatch,
     /// Board or product name
     pub board_name: [u8; 16],
-    /// Kernel command line, part 1
-    pub cmdline_part_1: Box<[u8; 512]>,
+    #[br(temp)]
+    #[bw(calc = *self.cmdline.first_chunk().unwrap())]
+    cmdline_part_1: [u8; 512],
     /// Hash digest
     pub hash_digest: [u8; 32],
-    /// Kernel command line, part 2
-    pub cmdline_part_2: Box<[u8; 1024]>,
+    #[br(temp)]
+    #[bw(calc = *self.cmdline.last_chunk().unwrap())]
+    cmdline_part_2: [u8; 1024],
+    /// Kernel command line
+    #[br(calc = [cmdline_part_1.as_slice(), cmdline_part_2.as_slice()].concat().try_into().unwrap())]
+    #[bw(ignore)]
+    pub cmdline: Box<[u8; 512 + 1024]>,
     /// Version-specific part of the boot image header.
     #[br(args(header_version))]
     pub versioned: HeaderV0Versioned,
 }
-// TODO: store cmdline as one contiguous [u8; 1536]
+
 impl HeaderV0 {
     fn get_padding(&self, size: usize) -> usize {
         // self.page_size must be a power of two
@@ -155,7 +161,6 @@ impl HeaderV0 {
         }
     }
 }
-
 /// Version-specific part of boot image headers v0-v2
 #[binrw]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -232,7 +237,7 @@ pub struct HeaderV3 {
     #[bw(calc = self.header_version())]
     header_version: u32,
     /// Kernel command line
-    pub cmdline: Box<[u8; 1024 + 512]>,
+    pub cmdline: Box<[u8; 512 + 1024]>,
     /// Boot signature size.
     ///
     /// This is only present in version 4 and the version will be inferred from this field.
@@ -364,6 +369,13 @@ impl Header {
         match self {
             Self::V0(hdr) => hdr.page_size as usize,
             Self::V3(_) => HeaderV3::PAGE_SIZE,
+        }
+    }
+    /// Returns the kernel command line.
+    pub fn cmdline(&self) -> &[u8; 512 + 1024] {
+        match self {
+            Self::V0(hdr) => &hdr.cmdline,
+            Self::V3(hdr) => &hdr.cmdline,
         }
     }
 }
