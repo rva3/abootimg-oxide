@@ -36,16 +36,26 @@ enum TextOutputFormat {
     Mkbootimg,
 }
 
+struct OutPaths {
+    kernel: PathBuf,
+    ramdisk: PathBuf,
+    second: PathBuf,
+    recovery_dtbo: PathBuf,
+    dtb: PathBuf,
+}
+
 fn main() {
     let args = Args::parse();
-    let mut r = BufReader::new(File::open(args.boot_img).unwrap());
+    let mut r = BufReader::new(File::open(&args.boot_img).unwrap());
     let hdr = Header::parse(&mut r).unwrap();
 
-    let kernel_out_path = args.out.join("kernel");
-    let ramdisk_out_path = args.out.join("ramdisk");
-    let second_out_path = args.out.join("second");
-    let recovery_dtbo_out_path = args.out.join("recovery_dtbo");
-    let dtb_out_path = args.out.join("dtb");
+    let out_paths = OutPaths {
+        kernel: args.out.join("kernel"),
+        ramdisk: args.out.join("ramdisk"),
+        second: args.out.join("second"),
+        recovery_dtbo: args.out.join("recovery_dtbo"),
+        dtb: args.out.join("dtb"),
+    };
 
     // Get the inner File, so copy_file_range can be used
     let r = r.get_mut();
@@ -54,14 +64,18 @@ fn main() {
 
     let mut extract_part = |pos: usize, size: u32, path: &Path| {
         r.seek(SeekFrom::Start(pos as u64)).unwrap();
-        io::copy(&mut r.take(size as u64), &mut File::create(path).unwrap()).unwrap();
+        io::copy(
+            &mut r.take(u64::from(size)),
+            &mut File::create(path).unwrap(),
+        )
+        .unwrap();
     };
 
-    extract_part(hdr.kernel_position(), hdr.kernel_size(), &kernel_out_path);
+    extract_part(hdr.kernel_position(), hdr.kernel_size(), &out_paths.kernel);
     extract_part(
         hdr.ramdisk_position(),
         hdr.ramdisk_size(),
-        &ramdisk_out_path,
+        &out_paths.ramdisk,
     );
 
     match &hdr {
@@ -70,7 +84,7 @@ fn main() {
                 extract_part(
                     v0.second_bootloader_position(),
                     v0.second_bootloader_size,
-                    &second_out_path,
+                    &out_paths.second,
                 );
             }
             if let HeaderV0Versioned::V1 {
@@ -84,13 +98,13 @@ fn main() {
                     extract_part(
                         v0.recovery_dtbo_position(),
                         recovery_dtbo_size,
-                        &recovery_dtbo_out_path,
+                        &out_paths.recovery_dtbo,
                     );
                 }
             }
             if let HeaderV0Versioned::V2 { dtb_size, .. } = v0.versioned {
                 if dtb_size != 0 {
-                    extract_part(v0.dtb_position().unwrap(), dtb_size, &dtb_out_path);
+                    extract_part(v0.dtb_position().unwrap(), dtb_size, &out_paths.dtb);
                 }
             }
         }
@@ -107,164 +121,172 @@ fn main() {
 
     match args.format {
         TextOutputFormat::Info => {
-            // TODO: vendor boot images
-            println!("boot magic: ANDROID!");
-            match &hdr {
-                Header::V0(v0) => {
-                    println!("kernel_size: {}", v0.kernel_size);
-                    println!("kernel load address: 0x{:08x}", v0.kernel_addr);
-                    println!("ramdisk size: {}", v0.ramdisk_size);
-                    println!("ramdisk load address: 0x{:08x}", v0.ramdisk_addr);
-                    println!("second bootloader size: {}", v0.second_bootloader_size);
-                    println!(
-                        "second bootloader load address: 0x{:08x}",
-                        v0.second_bootloader_addr
-                    );
-                    println!("kernel tags load address: 0x{:08x}", v0.tags_addr);
-                    println!("page size: {}", v0.page_size);
-                }
-                Header::V3(v3) => {
-                    println!("kernel_size: {}", v3.kernel_size);
-                    println!("ramdisk size: {}", v3.kernel_size);
-                }
-            }
-
-            println!("os version: {}", hdr.osversionpatch().version());
-            println!("os patch level: {}", hdr.osversionpatch().patch());
-            println!("boot image header version: {}", hdr.header_version());
-            match &hdr {
-                Header::V0(v0) => {
-                    print!("product name: ");
-                    print_null_bytestring(&v0.board_name);
-                    print!("\ncommand line args: ");
-                    print_null_bytestring(&v0.cmdline[..512]);
-                    print!("\nadditional command line args: ");
-                    print_null_bytestring(&v0.cmdline[512..]);
-                    println!();
-                    match v0.versioned {
-                        HeaderV0Versioned::V1 {
-                            recovery_dtbo_size,
-                            recovery_dtbo_addr,
-                        } => {
-                            println!("recovery dtbo size: {recovery_dtbo_size}");
-                            println!("recovery dtbo offset: 0x{recovery_dtbo_addr:016x}");
-                            println!("boot header size: 1648");
-                        }
-                        HeaderV0Versioned::V2 {
-                            recovery_dtbo_size,
-                            recovery_dtbo_addr,
-                            dtb_size,
-                            dtb_addr,
-                        } => {
-                            println!("recovery dtbo size: {recovery_dtbo_size}");
-                            println!("recovery dtbo offset: 0x{recovery_dtbo_addr:016x}");
-                            println!("boot header size: 1660");
-                            println!("dtb size: {dtb_size}");
-                            println!("dtb address: 0x{dtb_addr:016x}");
-                        }
-                        _ => {}
-                    }
-                }
-                Header::V3(v3) => {
-                    print!("command line args: ");
-                    print_null_bytestring(v3.cmdline.as_slice());
-                    println!();
-                    if let Some(signature_size) = v3.v4_signature_size {
-                        println!("boot.img signature size: {signature_size}");
-                    }
-                }
-            }
+            info_fmt(&hdr);
         }
         TextOutputFormat::Mkbootimg => {
-            let sep = if args.null { '\0' } else { ' ' };
+            mkbootimg_fmt(&hdr, &args, &out_paths);
+        }
+    }
+}
 
-            print!(
-                "--header_version{sep}{}{sep}--os_version{sep}{}{sep}--os_patch_level{sep}{}",
-                hdr.header_version(),
-                hdr.osversionpatch().version(),
-                hdr.osversionpatch().patch()
+fn info_fmt(hdr: &Header) {
+    // TODO: vendor boot images
+    println!("boot magic: ANDROID!");
+    match hdr {
+        Header::V0(v0) => {
+            println!("kernel_size: {}", v0.kernel_size);
+            println!("kernel load address: 0x{:08x}", v0.kernel_addr);
+            println!("ramdisk size: {}", v0.ramdisk_size);
+            println!("ramdisk load address: 0x{:08x}", v0.ramdisk_addr);
+            println!("second bootloader size: {}", v0.second_bootloader_size);
+            println!(
+                "second bootloader load address: 0x{:08x}",
+                v0.second_bootloader_addr
             );
-            {
-                // TODO: quote if out has whitespace
-                print!("{sep}--kernel{sep}");
-                stdout()
-                    .write_all(kernel_out_path.as_os_str().as_encoded_bytes())
-                    .ok();
-                print!("{sep}--ramdisk{sep}");
-                stdout()
-                    .write_all(ramdisk_out_path.as_os_str().as_encoded_bytes())
-                    .ok();
-                if let Header::V0(v0) = &hdr {
-                    if v0.second_bootloader_size != 0 {
-                        print!("{sep}--second{sep}");
-                        stdout()
-                            .write_all(second_out_path.as_os_str().as_encoded_bytes())
-                            .ok();
-                    }
-                    if let HeaderV0Versioned::V1 {
-                        recovery_dtbo_size, ..
-                    }
-                    | HeaderV0Versioned::V2 {
-                        recovery_dtbo_size, ..
-                    } = v0.versioned
-                    {
-                        if recovery_dtbo_size != 0 {
-                            print!("{sep}--recovery_dtbo{sep}");
-                            stdout()
-                                .write_all(recovery_dtbo_out_path.as_os_str().as_encoded_bytes())
-                                .ok();
-                        }
-                    }
-                    if let HeaderV0Versioned::V2 { dtb_size, .. } = v0.versioned {
-                        if dtb_size != 0 {
-                            print!("{sep}--dtb{sep}");
-                            stdout()
-                                .write_all(dtb_out_path.as_os_str().as_encoded_bytes())
-                                .ok();
-                        }
-                    }
+            println!("kernel tags load address: 0x{:08x}", v0.tags_addr);
+            println!("page size: {}", v0.page_size);
+        }
+        Header::V3(v3) => {
+            println!("kernel_size: {}", v3.kernel_size);
+            println!("ramdisk size: {}", v3.kernel_size);
+        }
+    }
+
+    println!("os version: {}", hdr.osversionpatch().version());
+    println!("os patch level: {}", hdr.osversionpatch().patch());
+    println!("boot image header version: {}", hdr.header_version());
+    match hdr {
+        Header::V0(v0) => {
+            print!("product name: ");
+            print_null_bytestring(&v0.board_name);
+            print!("\ncommand line args: ");
+            print_null_bytestring(&v0.cmdline[..512]);
+            print!("\nadditional command line args: ");
+            print_null_bytestring(&v0.cmdline[512..]);
+            println!();
+            match v0.versioned {
+                HeaderV0Versioned::V1 {
+                    recovery_dtbo_size,
+                    recovery_dtbo_addr,
+                } => {
+                    println!("recovery dtbo size: {recovery_dtbo_size}");
+                    println!("recovery dtbo offset: 0x{recovery_dtbo_addr:016x}");
+                    println!("boot header size: 1648");
                 }
+                HeaderV0Versioned::V2 {
+                    recovery_dtbo_size,
+                    recovery_dtbo_addr,
+                    dtb_size,
+                    dtb_addr,
+                } => {
+                    println!("recovery dtbo size: {recovery_dtbo_size}");
+                    println!("recovery dtbo offset: 0x{recovery_dtbo_addr:016x}");
+                    println!("boot header size: 1660");
+                    println!("dtb size: {dtb_size}");
+                    println!("dtb address: 0x{dtb_addr:016x}");
+                }
+                HeaderV0Versioned::V0 => {}
             }
-            if let Header::V0(v0) = &hdr {
-                print!("{sep}--pagesize{sep}0x{:08x}", hdr.page_size());
-                print!("{sep}--base{sep}0x{:08x}", 0);
-                print!("{sep}--kernel_offset{sep}0x{:08x}", v0.kernel_addr);
-                print!("{sep}--ramdisk_offset{sep}0x{:08x}", v0.ramdisk_addr);
-                print!(
-                    "{sep}--second_offset{sep}0x{:08x}",
-                    v0.second_bootloader_addr
-                );
-                print!("{sep}--tags_offset{sep}0x{:08x}", v0.tags_addr);
-                if let HeaderV0Versioned::V2 { dtb_addr, .. } = v0.versioned {
-                    print!(" --dtb_offset 0x{dtb_addr:016x}");
-                }
-                print!("{sep}--board{sep}");
-                if args.null {
-                    print_null_bytestring(&v0.board_name);
-                } else {
-                    print_escaped_null_bytestring(&v0.board_name);
-                }
-                print!("{sep}--cmdline{sep}");
-                if args.null {
-                    print_null_bytestring(v0.cmdline.as_slice());
-                } else {
-                    print_escaped_null_bytestring(v0.cmdline.as_slice());
-                }
-            }
-            if args.null {
-                print!("\0");
-            } else {
-                println!();
+        }
+        Header::V3(v3) => {
+            print!("command line args: ");
+            print_null_bytestring(v3.cmdline.as_slice());
+            println!();
+            if let Some(signature_size) = v3.v4_signature_size {
+                println!("boot.img signature size: {signature_size}");
             }
         }
     }
 }
 
-fn take_until_null(input: &[u8]) -> &[u8] {
-    match input.iter().position(|x| *x == 0) {
-        Some(null_idx) => &input[..null_idx],
-        None => input,
+fn mkbootimg_fmt(hdr: &Header, args: &Args, out_paths: &OutPaths) {
+    let sep = if args.null { '\0' } else { ' ' };
+
+    print!(
+        "--header_version{sep}{}{sep}--os_version{sep}{}{sep}--os_patch_level{sep}{}",
+        hdr.header_version(),
+        hdr.osversionpatch().version(),
+        hdr.osversionpatch().patch()
+    );
+    {
+        // TODO: quote if out has whitespace
+        print!("{sep}--kernel{sep}");
+        stdout()
+            .write_all(out_paths.kernel.as_os_str().as_encoded_bytes())
+            .ok();
+        print!("{sep}--ramdisk{sep}");
+        stdout()
+            .write_all(out_paths.ramdisk.as_os_str().as_encoded_bytes())
+            .ok();
+        if let Header::V0(v0) = &hdr {
+            if v0.second_bootloader_size != 0 {
+                print!("{sep}--second{sep}");
+                stdout()
+                    .write_all(out_paths.second.as_os_str().as_encoded_bytes())
+                    .ok();
+            }
+            if let HeaderV0Versioned::V1 {
+                recovery_dtbo_size, ..
+            }
+            | HeaderV0Versioned::V2 {
+                recovery_dtbo_size, ..
+            } = v0.versioned
+            {
+                if recovery_dtbo_size != 0 {
+                    print!("{sep}--recovery_dtbo{sep}");
+                    stdout()
+                        .write_all(out_paths.recovery_dtbo.as_os_str().as_encoded_bytes())
+                        .ok();
+                }
+            }
+            if let HeaderV0Versioned::V2 { dtb_size, .. } = v0.versioned {
+                if dtb_size != 0 {
+                    print!("{sep}--dtb{sep}");
+                    stdout()
+                        .write_all(out_paths.dtb.as_os_str().as_encoded_bytes())
+                        .ok();
+                }
+            }
+        }
     }
+    if let Header::V0(v0) = &hdr {
+        print!("{sep}--pagesize{sep}0x{:08x}", hdr.page_size());
+        print!("{sep}--base{sep}0x{:08x}", 0);
+        print!("{sep}--kernel_offset{sep}0x{:08x}", v0.kernel_addr);
+        print!("{sep}--ramdisk_offset{sep}0x{:08x}", v0.ramdisk_addr);
+        print!(
+            "{sep}--second_offset{sep}0x{:08x}",
+            v0.second_bootloader_addr
+        );
+        print!("{sep}--tags_offset{sep}0x{:08x}", v0.tags_addr);
+        if let HeaderV0Versioned::V2 { dtb_addr, .. } = v0.versioned {
+            print!(" --dtb_offset 0x{dtb_addr:016x}");
+        }
+        print!("{sep}--board{sep}");
+        if args.null {
+            print_null_bytestring(&v0.board_name);
+        } else {
+            print_escaped_null_bytestring(&v0.board_name);
+        }
+        print!("{sep}--cmdline{sep}");
+        if args.null {
+            print_null_bytestring(v0.cmdline.as_slice());
+        } else {
+            print_escaped_null_bytestring(v0.cmdline.as_slice());
+        }
+    }
+    if args.null {
+        print!("\0");
+    } else {
+        println!();
+    }
+}
+
+fn take_until_null(input: &[u8]) -> &[u8] {
+    input
+        .iter()
+        .position(|x| *x == 0)
+        .map_or(input, |null_idx| &input[..null_idx])
 }
 fn print_escaped_null_bytestring(input: &[u8]) {
     let q = shlex::bytes::Quoter::new();

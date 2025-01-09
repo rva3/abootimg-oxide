@@ -40,14 +40,15 @@ pub struct VendorHeader {
 }
 impl VendorHeader {
     /// Returns the vendor boot image header's version number.
-    pub fn header_version(&self) -> u32 {
+    #[must_use]
+    pub const fn header_version(&self) -> u32 {
         if self.v4.is_some() {
             4
         } else {
             3
         }
     }
-    fn header_size(&self) -> u32 {
+    const fn header_size(&self) -> u32 {
         if self.v4.is_some() {
             2128
         } else {

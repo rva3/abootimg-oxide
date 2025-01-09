@@ -107,13 +107,14 @@ pub struct HeaderV0 {
 }
 
 impl HeaderV0 {
-    fn get_padding(&self, size: usize) -> usize {
+    const fn get_padding(&self, size: usize) -> usize {
         // self.page_size must be a power of two
         let page_size = self.page_size as usize;
         (page_size - (size & (page_size - 1))) & (page_size - 1)
     }
     /// Returns the boot image header's version number.
-    pub fn header_version(&self) -> u32 {
+    #[must_use]
+    pub const fn header_version(&self) -> u32 {
         match self.versioned {
             HeaderV0Versioned::V0 => 0,
             HeaderV0Versioned::V1 { .. } => 1,
@@ -121,23 +122,27 @@ impl HeaderV0 {
         }
     }
     /// Returns the kernel's position in the boot image.
-    pub fn kernel_position(&self) -> usize {
+    #[must_use]
+    pub const fn kernel_position(&self) -> usize {
         1660 + self.get_padding(1660)
     }
     /// Returns the ramdisk's position in the boot image.
-    pub fn ramdisk_position(&self) -> usize {
+    #[must_use]
+    pub const fn ramdisk_position(&self) -> usize {
         self.kernel_position()
             + self.kernel_size as usize
             + self.get_padding(self.kernel_size as usize)
     }
     /// Returns the second stage bootloader's position in the boot image.
-    pub fn second_bootloader_position(&self) -> usize {
+    #[must_use]
+    pub const fn second_bootloader_position(&self) -> usize {
         self.ramdisk_position()
             + self.ramdisk_size as usize
             + self.get_padding(self.ramdisk_size as usize)
     }
     /// Returns the recovery DTBO's position in the boot image.
-    pub fn recovery_dtbo_position(&self) -> usize {
+    #[must_use]
+    pub const fn recovery_dtbo_position(&self) -> usize {
         self.second_bootloader_position()
             + self.second_bootloader_size as usize
             + self.get_padding(self.second_bootloader_size as usize)
@@ -145,7 +150,8 @@ impl HeaderV0 {
     /// Returns the DTB's position in the boot image.
     ///
     /// This returns `None` at version 0.
-    pub fn dtb_position(&self) -> Option<usize> {
+    #[must_use]
+    pub const fn dtb_position(&self) -> Option<usize> {
         match self.versioned {
             HeaderV0Versioned::V0 => None,
             HeaderV0Versioned::V1 {
@@ -248,37 +254,41 @@ impl HeaderV3 {
     const PAGE_SIZE: usize = 4096;
 
     /// Returns the boot image header's version number.
-    pub fn header_version(&self) -> u32 {
+    #[must_use]
+    pub const fn header_version(&self) -> u32 {
         if self.v4_signature_size.is_some() {
             4
         } else {
             3
         }
     }
-    fn header_size(&self) -> u32 {
+    const fn header_size(&self) -> u32 {
         if self.v4_signature_size.is_some() {
             1584
         } else {
             1580
         }
     }
-    fn get_padding(size: usize) -> usize {
+    const fn get_padding(size: usize) -> usize {
         (Self::PAGE_SIZE - (size & (Self::PAGE_SIZE - 1))) & (Self::PAGE_SIZE - 1)
     }
     /// Returns the kernel's position in the boot image.
     ///
     /// Hardcoded to the page size, which is 4096.
+    #[must_use]
     pub const fn kernel_position() -> usize {
         Self::PAGE_SIZE
     }
     /// Returns the ramdisk's position in the boot image.
-    pub fn ramdisk_position(&self) -> usize {
+    #[must_use]
+    pub const fn ramdisk_position(&self) -> usize {
         Self::kernel_position()
             + self.kernel_size as usize
             + Self::get_padding(self.kernel_size as usize)
     }
     /// Returns the boot signature's position in the boot image.
-    pub fn bootsig_position(&self) -> usize {
+    #[must_use]
+    pub const fn bootsig_position(&self) -> usize {
         self.ramdisk_position()
             + self.ramdisk_size as usize
             + Self::get_padding(self.ramdisk_size as usize)
@@ -295,6 +305,10 @@ pub enum Header {
 }
 impl Header {
     /// Parses an Android boot image header from a reader.
+    ///
+    /// # Errors
+    ///
+    /// This returns an error if reading fails or if the header is invalid.
     pub fn parse<R: std::io::Read + std::io::Seek>(reader: &mut R) -> Result<Self, binrw::Error> {
         reader.seek(std::io::SeekFrom::Start(0x28))?;
         let mut version_buf = [0u8; 4];
@@ -315,6 +329,10 @@ impl Header {
     /// Serializes an Android boot image header to a writer.
     ///
     /// Note that you must write the kernel, ramdisk, etc. yourself.
+    ///
+    /// # Errors
+    ///
+    /// This forwards errors from `writer`.
     pub fn write<W: std::io::Write>(&self, writer: &mut W) -> Result<(), binrw::Error> {
         let writer = &mut NoSeek::new(writer);
         match self {
@@ -323,56 +341,64 @@ impl Header {
         }
     }
     /// Returns the boot image header's version number.
-    pub fn header_version(&self) -> u32 {
+    #[must_use]
+    pub const fn header_version(&self) -> u32 {
         match self {
             Self::V0(hdr) => hdr.header_version(),
             Self::V3(hdr) => hdr.header_version(),
         }
     }
     /// Returns the boot image header's OS version and patch level.
-    pub fn osversionpatch(&self) -> OsVersionPatch {
+    #[must_use]
+    pub const fn osversionpatch(&self) -> OsVersionPatch {
         match self {
             Self::V0(hdr) => hdr.osversionpatch,
             Self::V3(hdr) => hdr.osversionpatch,
         }
     }
     /// Returns the kernel's position in the boot image.
-    pub fn kernel_position(&self) -> usize {
+    #[must_use]
+    pub const fn kernel_position(&self) -> usize {
         match self {
             Self::V0(hdr) => hdr.kernel_position(),
             Self::V3(_) => HeaderV3::kernel_position(),
         }
     }
     /// Returns the kernel's size.
-    pub fn kernel_size(&self) -> u32 {
+    #[must_use]
+    pub const fn kernel_size(&self) -> u32 {
         match self {
             Self::V0(hdr) => hdr.kernel_size,
             Self::V3(hdr) => hdr.kernel_size,
         }
     }
     /// Returns the ramdisk's position in the boot image.
-    pub fn ramdisk_position(&self) -> usize {
+    #[must_use]
+    pub const fn ramdisk_position(&self) -> usize {
         match self {
             Self::V0(hdr) => hdr.ramdisk_position(),
             Self::V3(hdr) => hdr.ramdisk_position(),
         }
     }
     /// Returns the ramdisk's size.
-    pub fn ramdisk_size(&self) -> u32 {
+    #[must_use]
+    pub const fn ramdisk_size(&self) -> u32 {
         match self {
             Self::V0(hdr) => hdr.ramdisk_size,
             Self::V3(hdr) => hdr.ramdisk_size,
         }
     }
     /// Returns the page size in bytes.
-    pub fn page_size(&self) -> usize {
+    #[must_use]
+    pub const fn page_size(&self) -> usize {
         match self {
             Self::V0(hdr) => hdr.page_size as usize,
             Self::V3(_) => HeaderV3::PAGE_SIZE,
         }
     }
     /// Returns the kernel command line.
-    pub fn cmdline(&self) -> &[u8; 512 + 1024] {
+    #[must_use]
+    pub const fn cmdline(&self) -> &[u8; 512 + 1024] {
         match self {
             Self::V0(hdr) => &hdr.cmdline,
             Self::V3(hdr) => &hdr.cmdline,

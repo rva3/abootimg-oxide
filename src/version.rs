@@ -21,15 +21,18 @@ pub struct OsVersionPatch(pub u32);
 
 impl OsVersionPatch {
     /// Creates a new `OsVersionPatch`.
-    pub fn new(version: OsVersion, patch: OsPatch) -> Self {
+    #[must_use]
+    pub const fn new(version: OsVersion, patch: OsPatch) -> Self {
         Self((version.0 << 11) + patch.0 as u32)
     }
     /// Returns the version part.
-    pub fn version(self) -> OsVersion {
+    #[must_use]
+    pub const fn version(self) -> OsVersion {
         OsVersion(self.0 >> 11)
     }
     /// Returns the patch part.
-    pub fn patch(self) -> OsPatch {
+    #[must_use]
+    pub const fn patch(self) -> OsPatch {
         OsPatch((self.0 & 0x7ff) as u16)
     }
 }
@@ -50,16 +53,19 @@ impl fmt::Debug for OsVersionPatch {
 pub struct OsPatch(pub u16);
 impl OsPatch {
     /// Creates a new `OsPatch`.
-    pub fn new(year: u16, month: u8) -> Self {
+    #[must_use]
+    pub const fn new(year: u16, month: u8) -> Self {
         Self(((year - 2000) << 4) + month as u16)
     }
     /// Returns the year.
-    pub fn year(self) -> u16 {
+    #[must_use]
+    pub const fn year(self) -> u16 {
         // Highest 12 bits indicate year
         (self.0 >> 4) + 2000
     }
     /// Returns the month.
-    pub fn month(self) -> u8 {
+    #[must_use]
+    pub const fn month(self) -> u8 {
         // Lowest 4 bits indicate month
         (self.0 & 0xf) as u8
     }
@@ -91,11 +97,13 @@ impl fmt::Debug for OsPatch {
 pub struct OsVersion(pub u32);
 impl OsVersion {
     /// Creates a new `OsVersion`.
-    pub fn new(a: u8, b: u8, c: u8) -> Self {
+    #[must_use]
+    pub const fn new(a: u8, b: u8, c: u8) -> Self {
         Self(((a as u32) << 14) | ((b as u32) << 7) | c as u32)
     }
     /// Returns the version parts.
-    pub fn version_parts(self) -> (u8, u8, u8) {
+    #[must_use]
+    pub const fn version_parts(self) -> (u8, u8, u8) {
         let x = self.0;
         let a = x >> 14; // Top 7 bits
         let b = (x >> 7) & 0x7f; // Middle 7 bits
