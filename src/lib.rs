@@ -321,7 +321,7 @@ impl Header {
             version => {
                 return Err(binrw::Error::AssertFail {
                     pos: 0x28,
-                    message: format!("Unknown header version: {}", version),
+                    message: format!("Unknown header version: {version}"),
                 })
             }
         })
