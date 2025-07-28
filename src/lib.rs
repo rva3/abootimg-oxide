@@ -6,7 +6,7 @@
 //!
 //! # Examples
 //!
-//! ```
+//! ```no_run
 //! use std::fs::File;
 //! use abootimg_oxide::{BufReader, Header};
 //!

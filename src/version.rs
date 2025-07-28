@@ -105,7 +105,7 @@ impl OsVersion {
     #[must_use]
     pub const fn version_parts(self) -> (u8, u8, u8) {
         let x = self.0;
-        let a = x >> 14; // Top 7 bits
+        let a = (x >> 14) & 0x7f; // Top 7 bits
         let b = (x >> 7) & 0x7f; // Middle 7 bits
         let c = x & 0x7f; // Low 7 bits
         (a as u8, b as u8, c as u8)
@@ -125,13 +125,23 @@ impl fmt::Debug for OsVersion {
 }
 
 #[cfg(test)]
-#[test]
-fn test() {
-    let vp = OsVersionPatch(402653574);
-    assert_eq!(format!("{vp:?}"), "OsVersionPatch(12.0.0, 2024-06)");
-    assert_eq!(vp.version().to_string(), "12.0.0");
-    assert_eq!(vp.patch().to_string(), "2024-06");
-    assert_eq!(vp, OsVersionPatch::new(vp.version(), vp.patch()));
-    assert_eq!(vp.version(), OsVersion::new(12, 0, 0));
-    assert_eq!(vp.patch(), OsPatch::new(2024, 6));
+mod tests {
+    use super::*;
+    #[test]
+    fn basic() {
+        let vp = OsVersionPatch(0x1800_0186);
+        assert_eq!(format!("{vp:?}"), "OsVersionPatch(12.0.0, 2024-06)");
+        assert_eq!(vp.version().to_string(), "12.0.0");
+        assert_eq!(vp.patch().to_string(), "2024-06");
+        assert_eq!(vp, OsVersionPatch::new(vp.version(), vp.patch()));
+        assert_eq!(vp.version(), OsVersion::new(12, 0, 0));
+        assert_eq!(vp.patch(), OsPatch::new(2024, 6));
+    }
+    #[test]
+    fn truncating_behavior() {
+        let ver = OsVersion(0b1111_1111 << 14);
+        assert_eq!(ver.version_parts(), (0b0111_1111, 0, 0));
+        assert_eq!(format!("{ver:?}"), "127.0.0");
+        assert_eq!(ver.to_string(), "127.0.0");
+    }
 }
