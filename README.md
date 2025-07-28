@@ -2,6 +2,9 @@
 
 [![Crates.io](https://img.shields.io/crates/v/abootimg-oxide)](https://lib.rs/crates/abootimg-oxide)
 [![Documentation](https://docs.rs/abootimg-oxide/badge.svg)](https://docs.rs/abootimg-oxide)
+![Crates.io MSRV](https://img.shields.io/crates/msrv/abootimg-oxide)
+![Crates.io License](https://img.shields.io/crates/l/abootimg-oxide)
+![Crates.io Total Downloads](https://img.shields.io/crates/d/abootimg-oxide)
 
 Android boot image (boot.img) parser written in Rust
 
