@@ -1,3 +1,11 @@
+### 0.2.1
+
+- fix: Add stricter Clippy lints
+  * Added `const` and `#[must_use]` when recommended
+- build: Add MSRV (minimum supported Rust version)
+- fix: Truncate first part of `OsVersion` to 7 bits
+  * This bug was caught by Clippy!
+
 ### 0.2.0
 
 - Combine `HeaderV0`'s cmdline fields
@@ -13,8 +21,8 @@
 
 ### 0.1.1
 
-* Handle unknown header version properly instead of panicking
+- Handle unknown header version properly instead of panicking
 
 ### 0.1.0
 
-* Initial release
+- Initial release
