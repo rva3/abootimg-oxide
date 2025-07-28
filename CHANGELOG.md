@@ -1,3 +1,16 @@
+### 0.2.0
+
+- Combine `HeaderV0`'s cmdline fields
+- Add `Header::cmdline()`
+- Add warning about unreliable OS versioning
+
+### 0.1.2
+
+- Re-export `binrw`'s `BufReader`
+- Add example
+- Add description to `unpack_bootimg`'s Cargo.toml
+- Expose `VendorHeaderV4`
+
 ### 0.1.1
 
 * Handle unknown header version properly instead of panicking
