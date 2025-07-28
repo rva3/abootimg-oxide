@@ -1,3 +1,5 @@
+//! Extracting a kernel from an Android boot image
+
 use std::{
     fs::File,
     io::{self, BufWriter, Read, Seek, SeekFrom},
@@ -15,5 +17,5 @@ fn main() {
     let r = r.get_mut();
     r.seek(SeekFrom::Start(hdr.kernel_position() as u64))
         .unwrap();
-    io::copy(&mut r.take(hdr.kernel_size() as u64), w.get_mut()).unwrap();
+    io::copy(&mut r.take(hdr.kernel_size().into()), w.get_mut()).unwrap();
 }
