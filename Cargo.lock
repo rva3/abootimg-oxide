@@ -7,6 +7,7 @@ name = "abootimg-oxide"
 version = "0.2.1"
 dependencies = [
  "binrw",
+ "expect-test-bytes",
 ]
 
 [[package]]
@@ -145,6 +146,12 @@ name = "either"
 version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
+
+[[package]]
+name = "expect-test-bytes"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7331bb8eba452c32585da5d10375d88e0f4622f2a63f6f5987590469b4d41885"
 
 [[package]]
 name = "heck"

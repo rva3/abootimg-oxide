@@ -23,16 +23,20 @@
 //!     .unwrap();
 //! io::copy(&mut r.take(hdr.kernel_size().into()), w.get_mut()).unwrap();
 //! ```
+//!
+//! # Documentation
+//!
+//! - <https://source.android.com/docs/core/architecture/bootloader/boot-image-header>
+//! - <https://docs.u-boot.org/en/latest/android/boot-image.html>
+//! - <https://source.android.com/docs/core/architecture/partitions/vendor-boot-partitions>
 
 #[doc(no_inline)]
 pub use binrw::io::BufReader;
 
-mod version;
-mod vendor;
 mod standard;
+mod vendor;
+mod version;
 
-pub use version::{OsPatch, OsVersion, OsVersionPatch};
-pub use vendor::{VendorHeader, VendorHeaderV4};
 pub use standard::{Header, HeaderV0, HeaderV0Versioned, HeaderV3};
-
-// TODO: unit tests
+pub use vendor::{VendorHeader, VendorHeaderV4};
+pub use version::{OsPatch, OsVersion, OsVersionPatch};

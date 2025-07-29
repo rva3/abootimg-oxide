@@ -1,19 +1,19 @@
 [package]
 name = "abootimg-oxide"
-edition = "2021"
-description = "Android boot image (boot.img) parser"
-
 version.workspace = true
 authors.workspace = true
+edition = "2021"
+rust-version = "1.86.0" # Same as Nixpkgs 25.05, a sane default
+description = "Android boot image (boot.img) parser"
 readme = "README.md"
 repository.workspace = true
 license.workspace = true
 
-# Currently set to Nixpkgs 25.05, a sane default
-rust-version = "1.86.0"
-
 [dependencies]
 binrw = "0.14.0"
+
+[dev-dependencies]
+expect-test-bytes = "0.1.0"
 
 [lints]
 workspace = true

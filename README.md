@@ -8,10 +8,6 @@
 
 Android boot image (boot.img) parser written in Rust
 
-Thank you to
-[cfig/Android_boot_image_editor](https://github.com/cfig/Android_boot_image_editor)'s
-documentation about the layout of boot images!
-
 `unpack_bootimg` has been fully reimplemented using this library. Try it by
 running `cargo run --package=unpack_bootimg -- --boot_img <path to boot.img>`.
 
