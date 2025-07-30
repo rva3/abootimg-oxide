@@ -125,7 +125,9 @@ impl HeaderV0 {
     }
     /// Returns the DTB's position in the boot image.
     ///
-    /// This returns `None` at version 0.
+    /// This returns `None` in version 0.
+    ///
+    /// Note that this section is undefined in version 1.
     #[must_use]
     pub const fn dtb_position(&self) -> Option<usize> {
         match self.versioned {
@@ -270,6 +272,8 @@ impl HeaderV3 {
             + Self::get_padding(self.kernel_size as usize)
     }
     /// Returns the boot signature's position in the boot image.
+    ///
+    /// Note that this section is undefined in version 3.
     #[must_use]
     pub const fn bootsig_position(&self) -> usize {
         self.ramdisk_position()

@@ -79,8 +79,45 @@ impl VendorHeader {
             2112
         }
     }
+    const fn get_padding(&self, size: usize) -> usize {
+        let page_size = self.page_size as usize;
+        (page_size - (size % page_size)) % page_size
+    }
 
-    // TODO: functions to return positions
+    /// Returns the vendor ramdisk section's position in the vendor boot image.
+    #[must_use]
+    pub const fn ramdisk_position(&self) -> usize {
+        self.header_size() as usize + self.get_padding(self.header_size() as usize)
+    }
+    /// Returns the DTB's position in the vendor boot image.
+    #[must_use]
+    pub const fn dtb_position(&self) -> usize {
+        self.ramdisk_position()
+            + self.vendor_ramdisk_size as usize
+            + self.get_padding(self.vendor_ramdisk_size as usize)
+    }
+    /// Returns the vendor ramdisk table's position in the vendor boot image.
+    ///
+    /// Note that this section is undefined in version 3.
+    #[must_use]
+    pub const fn ramdisk_table_position(&self) -> usize {
+        self.dtb_position() + self.dtb_size as usize + self.get_padding(self.dtb_size as usize)
+    }
+    /// Returns the bootconfig's position in the vendor boot image.
+    ///
+    /// This returns `None` in version 3.
+    #[must_use]
+    pub const fn bootconfig_position(&self) -> Option<usize> {
+        if let Some(v4) = &self.v4 {
+            Some(
+                self.ramdisk_table_position()
+                    + v4.vendor_ramdisk_table_size as usize
+                    + self.get_padding(v4.vendor_ramdisk_table_size as usize),
+            )
+        } else {
+            None
+        }
+    }
 }
 
 /// V4-specific fields of the Android vendor boot image header
