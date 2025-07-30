@@ -80,17 +80,26 @@ mod tests {
     use super::*;
 
     #[track_caller]
-    fn check<T: std::fmt::Debug, E: std::fmt::Display>(res: Result<T, E>, target_err_msgs: &[&str]) {
+    fn check<T: std::fmt::Debug, E: std::fmt::Display>(
+        res: Result<T, E>,
+        target_err_msgs: &[&str],
+    ) {
         let s = res.unwrap_err().to_string();
         for target in target_err_msgs {
-            assert!(s.contains(target), "---\\\n{s}\n\\--- should contain {target:?}");
+            assert!(
+                s.contains(target),
+                "---\\\n{s}\n\\--- should contain {target:?}"
+            );
         }
     }
 
     #[test]
     fn invalid_file_signature_either() {
         let data = b"aaaaaaaa";
-        check(EitherHeader::read(&mut Cursor::new(data)), &["no variants matched", "bad magic"]);
+        check(
+            EitherHeader::read(&mut Cursor::new(data)),
+            &["no variants matched", "bad magic"],
+        );
     }
     #[test]
     fn invalid_version_either() {
@@ -99,9 +108,12 @@ mod tests {
         data.append(&mut b"aaaa".repeat(8));
         data.extend_from_slice(&u32::MAX.to_le_bytes());
         data.extend_from_slice(b"aaaa");
-        data.append(&mut b"a".repeat(16+512+32+1024));
+        data.append(&mut b"a".repeat(16 + 512 + 32 + 1024));
 
-        check(HeaderV0::read(&mut Cursor::new(&data)), &["invalid header version"]);
+        check(
+            HeaderV0::read(&mut Cursor::new(&data)),
+            &["invalid header version"],
+        );
     }
     #[test]
     fn invalid_version_direct_v0() {
@@ -110,9 +122,12 @@ mod tests {
         data.append(&mut b"aaaa".repeat(8));
         data.extend_from_slice(&3u32.to_le_bytes());
         data.extend_from_slice(b"aaaa");
-        data.append(&mut b"a".repeat(16+512+32+1024));
+        data.append(&mut b"a".repeat(16 + 512 + 32 + 1024));
 
-        check(HeaderV0::read(&mut Cursor::new(&data)), &["invalid header version"]);
+        check(
+            HeaderV0::read(&mut Cursor::new(&data)),
+            &["invalid header version"],
+        );
     }
     #[test]
     fn invalid_version_direct_v3() {
@@ -121,9 +136,12 @@ mod tests {
         data.append(&mut b"aaaa".repeat(4));
         data.append(&mut b"a".repeat(16));
         data.extend_from_slice(&0u32.to_le_bytes());
-        data.append(&mut b"a".repeat(512+1024));
+        data.append(&mut b"a".repeat(512 + 1024));
 
-        check(HeaderV3::read(&mut Cursor::new(&data)), &["invalid header version"]);
+        check(
+            HeaderV3::read(&mut Cursor::new(&data)),
+            &["invalid header version"],
+        );
     }
 
     #[test]
@@ -133,9 +151,12 @@ mod tests {
         data.append(&mut b"aaaa".repeat(4));
         data.append(&mut b"a".repeat(16));
         data.extend_from_slice(&3u32.to_le_bytes());
-        data.append(&mut b"a".repeat(512+1024));
+        data.append(&mut b"a".repeat(512 + 1024));
 
-        check(HeaderV3::read(&mut Cursor::new(&data)), &["invalid header size"]);
+        check(
+            HeaderV3::read(&mut Cursor::new(&data)),
+            &["invalid header size"],
+        );
     }
 
     #[test]
@@ -145,8 +166,11 @@ mod tests {
         data.append(&mut b"aaaa".repeat(4));
         data.append(&mut b"a".repeat(16));
         data.extend_from_slice(&3u32.to_le_bytes());
-        data.append(&mut b"a".repeat(512+1024));
+        data.append(&mut b"a".repeat(512 + 1024));
 
-        check(EitherHeader::read(&mut Cursor::new(&data)), &["invalid header size"]);
+        check(
+            EitherHeader::read(&mut Cursor::new(&data)),
+            &["invalid header size"],
+        );
     }
 }
