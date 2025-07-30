@@ -1,3 +1,11 @@
+### 0.2.2
+
+- test: Add snapshot tests
+- docs: Add section layout diagram to `VendorHeader`
+- feat: Add functions to calculate section positions in `VendorHeader`
+- feat: Add `no_std` with `alloc` support
+- feat: Add `EitherHeader`
+
 ### 0.2.1
 
 - fix: Add stricter Clippy lints
