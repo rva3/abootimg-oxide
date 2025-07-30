@@ -1,3 +1,4 @@
+use alloc::boxed::Box;
 use binrw::{binrw, BinRead, BinWrite};
 
 /// Android vendor boot image header version 3 and 4

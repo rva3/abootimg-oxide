@@ -27,6 +27,21 @@
 //!     .unwrap();
 //! io::copy(&mut r.take(hdr.kernel_size().into()), w.get_mut()).unwrap();
 //! ```
+//!
+//! # Features
+//!
+//! - `std` (enabled by default): Enables [`binrw`](mod@binrw)'s `std` feature. See its
+//!   documentation for more details.
+//!
+//! # Note about `Seek` requirement
+//!
+//! [`binrw`](mod@binrw) requires the [`Seek` trait](binrw::io::Seek) to be implemented on readers and writers.
+//!
+//! Only the read portion of [`Header`] seeks. For other functionality, you can use the
+//! [`binrw::io::NoSeek`] adapter to be able to read and write to and from unseekable streams.
+#![cfg_attr(not(any(feature = "std", test)), no_std)]
+
+extern crate alloc;
 
 #[doc(no_inline)]
 pub use binrw::io::BufReader;

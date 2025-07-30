@@ -1,3 +1,4 @@
+use alloc::{boxed::Box, format};
 use binrw::{binrw, io::NoSeek, BinRead, BinWrite};
 
 use crate::version::OsVersionPatch;
@@ -297,12 +298,16 @@ impl Header {
     /// # Errors
     ///
     /// This returns an error if reading fails or if the header is invalid.
-    pub fn parse<R: std::io::Read + std::io::Seek>(reader: &mut R) -> Result<Self, binrw::Error> {
-        reader.seek(std::io::SeekFrom::Start(0x28))?;
+    pub fn parse<R: binrw::io::Read + binrw::io::Seek>(
+        reader: &mut R,
+    ) -> Result<Self, binrw::Error> {
+        reader.seek(binrw::io::SeekFrom::Start(0x28))?;
         let mut version_buf = [0u8; 4];
         reader.read_exact(&mut version_buf)?;
-        reader.seek(std::io::SeekFrom::Start(0))?;
+        reader.seek(binrw::io::SeekFrom::Start(0))?;
 
+        // TODO: on next breaking change bump binrw
+        // TODO: on next breaking change, make `Header` implement/use binrw's traits!
         Ok(match u32::from_le_bytes(version_buf) {
             0..=2 => Self::V0(HeaderV0::read(reader)?),
             3 | 4 => Self::V3(HeaderV3::read(reader)?),
@@ -321,7 +326,7 @@ impl Header {
     /// # Errors
     ///
     /// This forwards errors from `writer`.
-    pub fn write<W: std::io::Write>(&self, writer: &mut W) -> Result<(), binrw::Error> {
+    pub fn write<W: binrw::io::Write>(&self, writer: &mut W) -> Result<(), binrw::Error> {
         let writer = &mut NoSeek::new(writer);
         match self {
             Self::V0(hdr) => hdr.write(writer),
