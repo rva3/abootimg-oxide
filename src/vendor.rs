@@ -179,5 +179,9 @@ mod tests {
         let actual_header = VendorHeader::read(&mut Cursor::new(&actual_bytes)).unwrap();
 
         assert_eq!(expected_header, actual_header);
+
+        let either_header = crate::EitherHeader::read(&mut Cursor::new(&actual_bytes)).unwrap();
+
+        assert_eq!(crate::EitherHeader::Vendor(expected_header), either_header);
     }
 }

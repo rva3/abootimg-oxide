@@ -151,6 +151,7 @@ impl HeaderV0 {
 #[binrw]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[br(import(header_version: u32))]
+#[br(pre_assert([0,1,2].contains(&header_version), "invalid header version: {header_version}"))]
 pub enum HeaderV0Versioned {
     /// V0-specific fields
     #[br(pre_assert(header_version == 0))]
@@ -210,7 +211,7 @@ pub enum HeaderV0Versioned {
 #[binrw]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[brw(little, magic = b"ANDROID!")]
-#[br(assert(header_size == self.header_size()))]
+#[br(assert(header_size == self.header_size(), "invalid header size: {header_size}"))]
 pub struct HeaderV3 {
     /// Kernel size
     pub kernel_size: u32,
@@ -223,6 +224,7 @@ pub struct HeaderV3 {
     header_size: u32,
     #[brw(pad_before = 16)]
     #[br(temp)]
+    #[br(assert(header_version == 3 || header_version == 4, "invalid header version: {header_version}"))]
     #[bw(calc = self.header_version())]
     header_version: u32,
     /// Kernel command line
@@ -433,5 +435,12 @@ mod tests {
         let actual_header = Header::parse(&mut Cursor::new(&actual_bytes)).unwrap();
 
         assert_eq!(expected_header, actual_header);
+
+        let either_header = crate::EitherHeader::read(&mut Cursor::new(&actual_bytes)).unwrap();
+
+        assert_eq!(
+            crate::EitherHeader::Standard(expected_header),
+            either_header
+        );
     }
 }
