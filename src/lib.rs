@@ -4,6 +4,10 @@
 //!
 //! Byte array fields (`[u8; N]`) can be used as null-terminated strings.
 //!
+//! [`Header`] denotes the standard `boot.img` boot image's header with the file signature
+//! `ANDROID!`. [`VendorHeader`] denotes the `vendor_boot.img` vendor boot image's header with the
+//! file signature `VNDRBOOT`.
+//!
 //! # Examples
 //!
 //! ```no_run
@@ -23,12 +27,6 @@
 //!     .unwrap();
 //! io::copy(&mut r.take(hdr.kernel_size().into()), w.get_mut()).unwrap();
 //! ```
-//!
-//! # Documentation
-//!
-//! - <https://source.android.com/docs/core/architecture/bootloader/boot-image-header>
-//! - <https://docs.u-boot.org/en/latest/android/boot-image.html>
-//! - <https://source.android.com/docs/core/architecture/partitions/vendor-boot-partitions>
 
 #[doc(no_inline)]
 pub use binrw::io::BufReader;

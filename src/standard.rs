@@ -4,7 +4,7 @@ use crate::version::OsVersionPatch;
 
 /// Standard Android boot image header versions 0, 1 and 2
 ///
-/// ## Section layout in the image
+/// # Section layout in the image
 ///
 /// Sections after the header are marked by fields of the form `*_size`, and are stored
 /// consecutively, padded to page size.
@@ -33,6 +33,11 @@ use crate::version::OsVersionPatch;
 /// │+ padding to page size   │
 /// └─────────────────────────┘
 /// ```
+///
+/// # Additional Documentation
+///
+/// - <https://source.android.com/docs/core/architecture/bootloader/boot-image-header>
+/// - <https://docs.u-boot.org/en/latest/android/boot-image.html>
 #[binrw]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[brw(little, magic = b"ANDROID!")]
@@ -179,7 +184,7 @@ pub enum HeaderV0Versioned {
 ///
 /// The page size is always 4096 bytes.
 ///
-/// ## Section layout in the image
+/// # Section layout in the image
 ///
 /// Sections after the header are marked by fields of the form `*_size`, and are stored
 /// consecutively, padded to page size.

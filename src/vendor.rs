@@ -1,8 +1,32 @@
 use binrw::{binrw, BinRead, BinWrite};
 
-// TODO: pretty section layout using asciiflow.com
-
 /// Android vendor boot image header version 3 and 4
+///
+/// # Section layout in the image
+///
+/// Sections after the header are marked by fields of the form `*_size`, and are stored
+/// consecutively, padded to page size.
+///
+/// ```text
+/// ┌─────────────────────────┐
+/// │vendor ramdisk (v3)      │
+/// │vendor ramdisks (v4)     │
+/// │+ padding to page size   │
+/// ├─────────────────────────┤
+/// │DTB                      │
+/// │+ padding to page size   │
+/// ├─────────────────────────┤
+/// │vendor ramdisk table (v4)│
+/// │+ padding to page size   │
+/// ├─────────────────────────┤
+/// │bootconfig (v4)          │
+/// │+ padding to page size   │
+/// └─────────────────────────┘
+/// ```
+///
+/// # Additional Documentation
+///
+/// - <https://source.android.com/docs/core/architecture/partitions/vendor-boot-partitions>
 #[binrw]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[brw(little, magic = b"VNDRBOOT")]
@@ -99,8 +123,12 @@ mod tests {
             board_name: *b"example\0\0\0\0\0\0\0\0\0",
             dtb_size: 0x7357_0006,
             dtb_addr: 0x7357_7357_7357_0007,
-            v4: Some(VendorHeaderV4 { vendor_ramdisk_table_size: 0x7357_0007, vendor_ramdisk_table_entry_num: 0x7357_0008, vendor_ramdisk_table_entry_size: 0x7357_0009, bootconfig_size: 0x7357_000a }),
-
+            v4: Some(VendorHeaderV4 {
+                vendor_ramdisk_table_size: 0x7357_0007,
+                vendor_ramdisk_table_entry_num: 0x7357_0008,
+                vendor_ramdisk_table_entry_size: 0x7357_0009,
+                bootconfig_size: 0x7357_000a,
+            }),
         };
 
         let mut actual_bytes = Vec::new();
