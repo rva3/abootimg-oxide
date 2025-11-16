@@ -29,9 +29,7 @@
 //! ```
 //!
 //! # Features
-//!
-//! - `std` (enabled by default): Enables [`binrw`](mod@binrw)'s `std` feature. See its
-//!   documentation for more details.
+#![doc = document_features::document_features!()]
 //!
 //! # Note about `Seek` requirement
 //!
