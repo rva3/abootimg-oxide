@@ -71,6 +71,11 @@ pub struct HeaderV0 {
     #[bw(calc = *self.cmdline.first_chunk().unwrap())]
     cmdline_part_1: [u8; 512],
     /// Hash digest
+    ///
+    /// Usually either a SHA1 (20 bytes of digest, 12 null-bytes) or a SHA256 (32 bytes of digest) digest of the following: kernel, ramdisk, second bootloader, recovery DTBO and DTB.
+    ///
+    /// - If the size is nonzero, hash the contents.
+    /// - Update the hash with the little-endian representation of the 32-bit unsigned size ([`u32::to_le_bytes`]), which may be zero.
     pub hash_digest: [u8; 32],
     #[br(temp)]
     #[bw(calc = *self.cmdline.last_chunk().unwrap())]
@@ -143,6 +148,22 @@ impl HeaderV0 {
                     + recovery_dtbo_size as usize
                     + self.get_padding(recovery_dtbo_size as usize),
             ),
+        }
+    }
+    /// Returns the size of the boot image.
+    #[must_use]
+    #[expect(
+        clippy::missing_panics_doc,
+        reason = "dtb_position always returns Some on V1 and V2"
+    )]
+    pub const fn boot_image_size(&self) -> usize {
+        match self.versioned {
+            HeaderV0Versioned::V0 => self.recovery_dtbo_position(),
+            HeaderV0Versioned::V1 { .. } => self.dtb_position().unwrap(),
+            HeaderV0Versioned::V2 { dtb_size, .. } =>
+                self.dtb_position().unwrap()
+                    + dtb_size as usize
+                    + self.get_padding(dtb_size as usize),
         }
     }
 }
