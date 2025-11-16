@@ -160,10 +160,11 @@ impl HeaderV0 {
         match self.versioned {
             HeaderV0Versioned::V0 => self.recovery_dtbo_position(),
             HeaderV0Versioned::V1 { .. } => self.dtb_position().unwrap(),
-            HeaderV0Versioned::V2 { dtb_size, .. } =>
+            HeaderV0Versioned::V2 { dtb_size, .. } => {
                 self.dtb_position().unwrap()
                     + dtb_size as usize
-                    + self.get_padding(dtb_size as usize),
+                    + self.get_padding(dtb_size as usize)
+            }
         }
     }
 }
@@ -424,8 +425,8 @@ impl Header {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
-
+    use alloc::vec::Vec;
+    use binrw::io::Cursor;
     use expect_test_bytes::expect_file;
 
     use super::*;

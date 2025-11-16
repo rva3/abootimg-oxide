@@ -5,7 +5,7 @@ use std::{
     io::{self, BufWriter, Read, Seek, SeekFrom},
 };
 
-use abootimg_oxide::{BufReader, Header};
+use abootimg_oxide::{binrw::io::BufReader, Header};
 
 fn main() {
     let mut r = BufReader::new(File::open("boot_a.img").unwrap());

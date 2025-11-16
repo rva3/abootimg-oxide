@@ -136,9 +136,8 @@ pub struct VendorHeaderV4 {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
-
-    use binrw::io::NoSeek;
+    use alloc::vec::Vec;
+    use binrw::io::{Cursor, NoSeek};
     use expect_test_bytes::expect_file;
 
     use super::*;

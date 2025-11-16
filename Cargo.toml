@@ -22,6 +22,10 @@ workspace = true
 default = ["std"]
 std = ["binrw/std"]
 
+[[example]]
+name = "extract-kernel"
+required-features = ["std"]
+
 [workspace]
 members = [ "mkbootimg","unpack_bootimg"]
 resolver = "2"

@@ -12,7 +12,7 @@
 //!
 //! ```no_run
 //! use std::fs::File;
-//! use abootimg_oxide::{BufReader, Header};
+//! use abootimg_oxide::{binrw::io::BufReader, Header};
 //!
 //! let mut r = BufReader::new(File::open("boot_a.img").unwrap());
 //! let hdr = Header::parse(&mut r).unwrap();
@@ -39,12 +39,21 @@
 //!
 //! Only the read portion of [`Header`] seeks. For other functionality, you can use the
 //! [`binrw::io::NoSeek`] adapter to be able to read and write to and from unseekable streams.
-#![cfg_attr(not(any(feature = "std", test)), no_std)]
+
+#![cfg_attr(not(test), no_std)]
 
 extern crate alloc;
 
-use binrw::binrw;
+/// Re-export for ease of use
+pub use binrw;
+
+/// **DO NOT USE**: This re-export will be removed at the next major release.
+#[deprecated(
+    since = "0.2.3",
+    note = "Will be removed at the next major release. Use `abootimg_oxide::binrw::io::BufReader` instead."
+)]
 #[doc(no_inline)]
+#[cfg(feature = "std")]
 pub use binrw::io::BufReader;
 
 mod standard;
@@ -52,7 +61,7 @@ mod vendor;
 mod version;
 
 /// Either variants of Android boot image header.
-#[binrw]
+#[binrw::binrw]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[brw(little)]
 pub enum EitherHeader {
@@ -73,14 +82,14 @@ pub use version::{OsPatch, OsVersion, OsVersionPatch};
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
-
-    use binrw::BinRead;
+    use alloc::string::ToString;
+    use alloc::vec::Vec;
+    use binrw::{io::Cursor, BinRead};
 
     use super::*;
 
     #[track_caller]
-    fn check<T: std::fmt::Debug, E: std::fmt::Display>(
+    fn check<T: core::fmt::Debug, E: core::fmt::Display>(
         res: Result<T, E>,
         target_err_msgs: &[&str],
     ) {

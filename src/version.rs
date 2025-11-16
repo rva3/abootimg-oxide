@@ -126,6 +126,8 @@ impl fmt::Debug for OsVersion {
 
 #[cfg(test)]
 mod tests {
+    use alloc::{format, string::ToString as _};
+
     use super::*;
     #[test]
     fn basic() {
