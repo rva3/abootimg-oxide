@@ -12,11 +12,14 @@ categories = ["parser-implementations", "no-std"]
 
 [dependencies]
 binrw = { version = "0.14.0", default-features = false, features = ["verbose-backtrace"] }
-
 document-features = "0.2.12"
+digest = { version = "0.10.7", optional = true }
 
 [dev-dependencies]
 expect-test-bytes = "0.1.0"
+sha1.workspace = true
+sha2.workspace = true
+hex_fmt.workspace = true
 
 [lints]
 workspace = true
@@ -28,14 +31,23 @@ default = ["std"]
 std = ["binrw/std"]
 
 ## Provide the [`HeaderV0::compute_hash_digest`] helper
-#hash = ["dep:sha1", "dep:sha2"]
+hash = ["dep:digest"]
 
 [package.metadata.docs.rs]
 all-features = true
+# enable unstable features in the documentation
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
+rustc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs"]
 
 [[example]]
 name = "extract-kernel"
 required-features = ["std"]
+
+[[example]]
+name = "compute-hash-digest"
+required-features = ["std", "hash"]
+doc-scrape-examples = true # Make sure that the examples are scraped
 
 [workspace]
 members = ["mkbootimg", "unpack_bootimg"]
@@ -49,6 +61,9 @@ license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 clap = { version = "4.5.16", features = ["derive"] }
+hex_fmt = "0.3.0"
+sha1 = "0.10.6"
+sha2 = "0.10.9"
 
 [workspace.lints.rust]
 missing_docs = "warn"

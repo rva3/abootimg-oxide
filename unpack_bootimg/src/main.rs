@@ -1,10 +1,10 @@
 use std::{
     fs::{create_dir_all, File},
-    io::{self, stdout, BufReader, Read, Seek, SeekFrom, Write},
+    io::{self, stdout, BufReader, Cursor, Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
 };
 
-use abootimg_oxide::{Header, HeaderV0Versioned};
+use abootimg_oxide::{Header, HeaderV0, HeaderV0Versioned};
 use clap::{Parser, ValueEnum};
 
 #[derive(Parser, Debug)]
@@ -18,6 +18,10 @@ struct Args {
     #[arg(long, default_value = "out")]
     out: PathBuf,
 
+    /// Whether to skip writing to `out` (added in abootimg-oxide)
+    #[arg(long)]
+    no_write: bool,
+
     /// Text output format
     #[arg(value_enum, long, default_value_t = TextOutputFormat::Info)]
     format: TextOutputFormat,
@@ -29,8 +33,10 @@ struct Args {
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 enum TextOutputFormat {
-    /// Pretty-printed info-rich text format suitable for human inspection
+    /// Pretty-printed info-rich text format suitable for human inspection. Identical output to AOSP `unpack_bootimg`
     Info,
+    /// Like the above but contains extra information like the hash digest (added in abootimg-oxide)
+    InfoExtended,
     /// Output shell-escaped (quoted) argument strings that can be used to
     /// reconstruct the boot image using `mkbootimg`
     Mkbootimg,
@@ -63,6 +69,9 @@ fn main() {
     create_dir_all(&args.out).unwrap();
 
     let mut extract_part = |pos: usize, size: u32, path: &Path| {
+        if args.no_write {
+            return;
+        }
         r.seek(SeekFrom::Start(pos as u64)).unwrap();
         io::copy(
             &mut r.take(u64::from(size)),
@@ -120,8 +129,12 @@ fn main() {
     }
 
     match args.format {
-        TextOutputFormat::Info => {
-            info_fmt(&hdr);
+        TextOutputFormat::Info | TextOutputFormat::InfoExtended => {
+            info_fmt(
+                &hdr,
+                matches!(args.format, TextOutputFormat::InfoExtended),
+                r,
+            );
         }
         TextOutputFormat::Mkbootimg => {
             mkbootimg_fmt(&hdr, &args, &out_paths);
@@ -129,7 +142,7 @@ fn main() {
     }
 }
 
-fn info_fmt(hdr: &Header) {
+fn info_fmt(hdr: &Header, extended: bool, r: &mut (impl Read + Seek)) {
     // TODO: vendor boot images
     println!("boot magic: ANDROID!");
     match hdr {
@@ -145,6 +158,70 @@ fn info_fmt(hdr: &Header) {
             );
             println!("kernel tags load address: 0x{:08x}", v0.tags_addr);
             println!("page size: {}", v0.page_size);
+
+            if extended {
+                println!("hash digest in header: {}", hex_fmt::HexFmt(v0.hash_digest));
+
+                // Naive heuristic
+                let is_sha1 = v0.hash_digest[20..] == [0; 32 - 20];
+
+                fn read_part(r: &mut (impl Read + Seek), pos: usize, size: u32) -> Vec<u8> {
+                    let mut buf = Vec::new();
+                    r.seek(SeekFrom::Start(pos as u64));
+                    r.take(size as u64).read_to_end(&mut buf);
+                    buf
+                }
+
+                let kernel = read_part(r, v0.kernel_position(), v0.kernel_size);
+                let ramdisk = read_part(r, v0.ramdisk_position(), v0.ramdisk_size);
+                let second_bootloader = read_part(
+                    r,
+                    v0.second_bootloader_position(),
+                    v0.second_bootloader_size,
+                );
+                let recovery_dtbo = if let HeaderV0Versioned::V1 {
+                    recovery_dtbo_size, ..
+                }
+                | HeaderV0Versioned::V2 {
+                    recovery_dtbo_size, ..
+                } = v0.versioned
+                {
+                    Some(read_part(
+                        r,
+                        v0.recovery_dtbo_position(),
+                        recovery_dtbo_size,
+                    ))
+                } else {
+                    None
+                };
+                let dtb = if let HeaderV0Versioned::V2 { dtb_size, .. } = v0.versioned {
+                    Some(read_part(r, v0.dtb_position().unwrap(), dtb_size))
+                } else {
+                    None
+                };
+
+                let hash_digest = if is_sha1 {
+                    HeaderV0::compute_hash_digest::<_, sha1::Sha1>(
+                        Some(Cursor::new(kernel)).as_mut(),
+                        Some(Cursor::new(ramdisk)).as_mut(),
+                        Some(Cursor::new(second_bootloader)).as_mut(),
+                        recovery_dtbo.map(Cursor::new).as_mut(),
+                        dtb.map(Cursor::new).as_mut(),
+                    )
+                    .unwrap()
+                } else {
+                    HeaderV0::compute_hash_digest::<_, sha2::Sha256>(
+                        Some(Cursor::new(kernel)).as_mut(),
+                        Some(Cursor::new(ramdisk)).as_mut(),
+                        Some(Cursor::new(second_bootloader)).as_mut(),
+                        recovery_dtbo.map(Cursor::new).as_mut(),
+                        dtb.map(Cursor::new).as_mut(),
+                    )
+                    .unwrap()
+                };
+
+                println!("computed hash digest: {}", hex_fmt::HexFmt(hash_digest));
+            }
         }
         Header::V3(v3) => {
             println!("kernel_size: {}", v3.kernel_size);

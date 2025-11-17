@@ -1,7 +1,13 @@
 use alloc::{boxed::Box, format};
-use binrw::{binrw, io::NoSeek, BinRead, BinWrite};
+use binrw::{
+    binrw,
+    io::{NoSeek, Read, Seek, Write},
+    BinRead, BinWrite,
+};
 
 use crate::version::OsVersionPatch;
+
+// TODO: extent/part/section type!!!
 
 /// Standard Android boot image header versions 0, 1 and 2
 ///
@@ -167,6 +173,44 @@ impl HeaderV0 {
             }
         }
     }
+
+    /// Finalizes the passed in `hasher` to create a [`Self::hash_digest`].
+    ///
+    /// # Errors
+    ///
+    /// Passes through errors that occur in the readers and errors when more than [`u32::MAX`]
+    /// bytes were read from a single file.
+    #[cfg(feature = "hash")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "hash")))]
+    pub fn compute_hash_digest<R: Read, D: digest::Digest>(
+        kernel: Option<&mut R>,
+        ramdisk: Option<&mut R>,
+        second_bootloader: Option<&mut R>,
+        recovery_dtbo: Option<&mut R>,
+        dtb: Option<&mut R>,
+    ) -> binrw::io::Result<[u8; 32]> {
+        let mut hasher = D::new();
+
+        for r in [kernel, ramdisk, second_bootloader, recovery_dtbo, dtb] {
+            if let Some(r) = r {
+                let mut buf = alloc::vec::Vec::new();
+                r.read_to_end(&mut buf)?;
+                hasher.update(&buf);
+                hasher.update(
+                    u32::try_from(buf.len())
+                        .map_err(|_| binrw::io::ErrorKind::InvalidInput)?
+                        .to_le_bytes(),
+                );
+            } else {
+                hasher.update(0u32.to_le_bytes());
+            }
+        }
+
+        let digest = hasher.finalize();
+        let mut buf = [0; _];
+        buf[..digest.len()].copy_from_slice(&digest);
+        Ok(buf)
+    }
 }
 
 /// Version-specific part of boot image headers v0-v2
@@ -322,9 +366,7 @@ impl Header {
     /// # Errors
     ///
     /// This returns an error if reading fails or if the header is invalid.
-    pub fn parse<R: binrw::io::Read + binrw::io::Seek>(
-        reader: &mut R,
-    ) -> Result<Self, binrw::Error> {
+    pub fn parse<R: Read + Seek>(reader: &mut R) -> Result<Self, binrw::Error> {
         reader.seek(binrw::io::SeekFrom::Start(0x28))?;
         let mut version_buf = [0u8; 4];
         reader.read_exact(&mut version_buf)?;
@@ -350,7 +392,7 @@ impl Header {
     /// # Errors
     ///
     /// This forwards errors from `writer`.
-    pub fn write<W: binrw::io::Write>(&self, writer: &mut W) -> Result<(), binrw::Error> {
+    pub fn write<W: Write>(&self, writer: &mut W) -> Result<(), binrw::Error> {
         let writer = &mut NoSeek::new(writer);
         match self {
             Self::V0(hdr) => hdr.write(writer),
