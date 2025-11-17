@@ -1,3 +1,10 @@
+### 0.2.3
+
+- feat: add `HeaderV0::full_write`
+- feat: add `HeaderV0::compute_hash_digest`
+- feat: use `document_features` crate
+- feat: add `HeaderV0::boot_image_size`
+
 ### 0.2.2
 
 - test: Add snapshot tests
