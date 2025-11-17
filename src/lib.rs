@@ -38,7 +38,7 @@
 //! Only the read portion of [`Header`] seeks. For other functionality, you can use the
 //! [`binrw::io::NoSeek`] adapter to be able to read and write to and from unseekable streams.
 
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(any(test, feature = "std")), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 extern crate alloc;

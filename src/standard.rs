@@ -1,7 +1,7 @@
 use alloc::{boxed::Box, format};
 use binrw::{
     binrw,
-    io::{NoSeek, Read, Seek, Write},
+    io::{NoSeek, Read, Seek, SeekFrom, Write},
     BinRead, BinWrite,
 };
 
@@ -210,6 +210,63 @@ impl HeaderV0 {
         let mut buf = [0; _];
         buf[..digest.len()].copy_from_slice(&digest);
         Ok(buf)
+    }
+
+    /// Writes the full Android boot image, including the different parts after the header.
+    ///
+    /// - Requires the Rust standard library for [`std::io::copy`].
+    /// - Assumes that the readers will output exact amounts. That is, `kernel` will only ever output exactly [`Self::kernel_size`] bytes.
+    ///
+    /// # Errors
+    ///
+    /// Passes through errors that occur in the readers or the writer or during serialization
+    /// of the header.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    pub fn full_write<W: Write + Seek, R: Read>(
+        &self,
+        writer: &mut W,
+        kernel: Option<&mut R>,
+        ramdisk: Option<&mut R>,
+        second_bootloader: Option<&mut R>,
+        recovery_dtbo: Option<&mut R>,
+        dtb: Option<&mut R>,
+    ) -> binrw::BinResult<()> {
+        let w = writer;
+
+        self.write(w)?;
+
+        if let Some(r) = kernel {
+            w.seek(SeekFrom::Start(self.kernel_position() as u64))?;
+            std::io::copy(r, w)?;
+        }
+
+        if let Some(r) = ramdisk {
+            w.seek(SeekFrom::Start(self.ramdisk_position() as u64))?;
+            std::io::copy(r, w)?;
+        }
+
+        if let Some(r) = second_bootloader {
+            w.seek(SeekFrom::Start(self.second_bootloader_position() as u64))?;
+            std::io::copy(r, w)?;
+        }
+
+        if let Some(r) = recovery_dtbo {
+            w.seek(SeekFrom::Start(self.recovery_dtbo_position() as u64))?;
+            std::io::copy(r, w)?;
+        }
+
+        if let Some(dtb_position) = self.dtb_position() {
+            if let Some(r) = dtb {
+                w.seek(SeekFrom::Start(dtb_position as u64))?;
+                std::io::copy(r, w)?;
+            }
+        }
+
+        // Final padding to page size
+        w.seek(SeekFrom::Start(self.boot_image_size() as u64))?;
+
+        Ok(())
     }
 }
 
