@@ -1,3 +1,8 @@
+### 0.3.0
+
+- build: patch generic-array dependency to fix docs
+- build: update binrw dependency
+
 ### 0.2.3
 
 - feat: add `HeaderV0::full_write`
