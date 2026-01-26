@@ -215,7 +215,8 @@ checksum = "7331bb8eba452c32585da5d10375d88e0f4622f2a63f6f5987590469b4d41885"
 [[package]]
 name = "generic-array"
 version = "0.14.7"
-source = "git+https://github.com/axelkar/generic-array?rev=0.14.7-doc_cfg-fix#f1758acc3dc407766a98ef23e592cd78cee89758"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
 dependencies = [
  "typenum",
  "version_check",

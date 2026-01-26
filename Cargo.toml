@@ -33,16 +33,14 @@ std = ["binrw/std"]
 ## Provide the [`HeaderV0::compute_hash_digest`] helper
 hash = ["dep:digest"]
 
-[patch.crates-io]
-# fix doc_cfg so abootimg-oxide's docs can build on docs.rs
-generic-array = { git = "https://github.com/axelkar/generic-array", rev = "0.14.7-doc_cfg-fix" }
 
 [package.metadata.docs.rs]
 all-features = true
-# enable unstable features in the documentation
-cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
-rustc-args = ["--cfg", "docsrs"]
-rustdoc-args = ["--cfg", "docsrs"]
+cargo-args = [
+  # enable unstable features in the documentation
+  "-Zunstable-options",
+  "-Zrustdoc-scrape-examples",
+]
 
 [[example]]
 name = "extract-kernel"
