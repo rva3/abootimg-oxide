@@ -1,3 +1,7 @@
+### 0.3.1
+
+- build: remove explicit `--cfg docsrs`
+
 ### 0.3.0
 
 - build: patch generic-array dependency to fix docs
