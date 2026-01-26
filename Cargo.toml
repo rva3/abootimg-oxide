@@ -11,7 +11,7 @@ license.workspace = true
 categories = ["parser-implementations", "no-std"]
 
 [dependencies]
-binrw = { version = "0.14.0", default-features = false, features = ["verbose-backtrace"] }
+binrw = { version = "0.15.0", default-features = false, features = ["verbose-backtrace"] }
 document-features = "0.2.12"
 digest = { version = "0.10.7", optional = true }
 
@@ -74,4 +74,4 @@ allow_attributes = "warn"
 allow_attributes_without_reason = "warn"
 should_panic_without_expect = "warn"
 str_to_string = "warn"
-string_to_string = "warn"
+implicit_clone = "warn"
