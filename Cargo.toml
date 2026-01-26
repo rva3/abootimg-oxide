@@ -33,6 +33,10 @@ std = ["binrw/std"]
 ## Provide the [`HeaderV0::compute_hash_digest`] helper
 hash = ["dep:digest"]
 
+[patch.crates-io]
+# fix doc_cfg so abootimg-oxide's docs can build on docs.rs
+generic-array = { git = "https://github.com/axelkar/generic-array", rev = "0.14.7-doc_cfg-fix" }
+
 [package.metadata.docs.rs]
 all-features = true
 # enable unstable features in the documentation
