@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-04-06
+
 ### Fixed
 
 - Expose OS version and patch level error types.
@@ -98,7 +100,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[unreleased]: https://github.com/axelkar/abootimg-oxide/compare/0.5.0...HEAD
+[unreleased]: https://github.com/axelkar/abootimg-oxide/compare/0.5.1...HEAD
+[0.5.1]: https://github.com/axelkar/abootimg-oxide/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/axelkar/abootimg-oxide/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/axelkar/abootimg-oxide/compare/0.3.1...0.4.0
 [0.3.1]: https://github.com/axelkar/abootimg-oxide/compare/0.3.0...0.3.1
