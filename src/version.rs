@@ -53,6 +53,7 @@ pub enum OsPatchError {
     /// `year` over 6095, which is not supported by the format (`year - 2000` won't fit into 12 bits).
     #[error("`year` over 6095, which is not supported by the format (`year - 2000` won't fit into 12 bits).")]
     YearWontFit,
+    /// `month` over 15, which is not supported by the format (won't fit into 4 bits).
     #[error("`month` over 15, which is not supported by the format (won't fit into 4 bits).")]
     MonthWontFit,
 }

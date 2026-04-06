@@ -77,7 +77,7 @@ pub enum EitherHeader {
 
 pub use standard::{Header, HeaderV0, HeaderV0Versioned, HeaderV3};
 pub use vendor::{VendorHeader, VendorHeaderV4};
-pub use version::{OsPatch, OsVersion, OsVersionPatch};
+pub use version::{OsPatch, OsPatchError, OsVersion, OsVersionPatch, OsVersionWontFitError};
 
 #[cfg(test)]
 mod tests {
