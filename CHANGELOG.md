@@ -7,24 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-06
+
 ### Changed
 
 - `OsPatch::new()` and `OsVersion::new()` are now fallible
 
-## [0.3.1]
+## [0.3.1] - 2026-01-26
 
 ### Changed
 
 - Remove explicit `--cfg docsrs`
 
-## [0.3.0]
+## [0.3.0] - 2026-01-26
 
 ### Changed
 
 - Patch `generic-array` dependency to fix docs
 - Update `binrw` dependency
 
-## [0.2.3]
+## [0.2.3] - 2025-11-17
 
 ### Added
 
@@ -32,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - add `HeaderV0::compute_hash_digest`
 - add `HeaderV0::boot_image_size`
 
-## [0.2.2]
+## [0.2.2] - 2025-07-30
 
 ### Added
 
@@ -41,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `no_std` with `alloc` support
 - `EitherHeader`
 
-## [0.2.1]
+## [0.2.1] - 2025-07-28
 
 ### Fixed
 
@@ -54,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add MSRV (minimum supported Rust version)
 
-## [0.2.0]
+## [0.2.0] - 2024-12-18
 
 ### Added
 
@@ -65,7 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Combine `HeaderV0`'s cmdline fields
 
-## [0.1.2]
+## [0.1.2] - 2024-12-18
 
 ### Added
 
@@ -74,13 +76,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Description to `unpack_bootimg`'s Cargo.toml
 - Expose `VendorHeaderV4`
 
-## [0.1.1]
+## [0.1.1] - 2024-09-06
 
 ### Fixed
 
 - Handle unknown header version properly instead of panicking
 
-## 0.1.0
+## 0.1.0 - 2024-09-01
 
 ### Added
 
