@@ -13,7 +13,7 @@ categories = ["parser-implementations", "no-std"]
 [dependencies]
 binrw = { version = "0.15.0", default-features = false, features = ["verbose-backtrace"] }
 document-features = "0.2.12"
-digest = { version = "0.10.7", optional = true }
+digest = { version = "0.11.2", optional = true }
 thiserror = "2.0.18"
 
 [dev-dependencies]
