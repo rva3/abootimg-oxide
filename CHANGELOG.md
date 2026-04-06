@@ -1,52 +1,97 @@
-### 0.3.1
+# Changelog
 
-- build: remove explicit `--cfg docsrs`
+All notable changes to this project will be documented in this file.
 
-### 0.3.0
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-- build: patch generic-array dependency to fix docs
-- build: update binrw dependency
+## [Unreleased]
 
-### 0.2.3
+### Changed
 
-- feat: add `HeaderV0::full_write`
-- feat: add `HeaderV0::compute_hash_digest`
-- feat: use `document_features` crate
-- feat: add `HeaderV0::boot_image_size`
+- `OsPatch::new()` and `OsVersion::new()` are now fallible
 
-### 0.2.2
+## [0.3.1]
 
-- test: Add snapshot tests
-- docs: Add section layout diagram to `VendorHeader`
-- feat: Add functions to calculate section positions in `VendorHeader`
-- feat: Add `no_std` with `alloc` support
-- feat: Add `EitherHeader`
+### Changed
 
-### 0.2.1
+- Remove explicit `--cfg docsrs`
 
-- fix: Add stricter Clippy lints
+## [0.3.0]
+
+### Changed
+
+- Patch `generic-array` dependency to fix docs
+- Update `binrw` dependency
+
+## [0.2.3]
+
+### Added
+
+- add `HeaderV0::full_write`
+- add `HeaderV0::compute_hash_digest`
+- add `HeaderV0::boot_image_size`
+
+## [0.2.2]
+
+### Added
+
+- Section layout diagram to `VendorHeader`'s documentation
+- Functions to calculate section positions in `VendorHeader`
+- `no_std` with `alloc` support
+- `EitherHeader`
+
+## [0.2.1]
+
+### Fixed
+
+- Add stricter Clippy lints
   * Added `const` and `#[must_use]` when recommended
-- build: Add MSRV (minimum supported Rust version)
-- fix: Truncate first part of `OsVersion` to 7 bits
+- Truncate first part of `OsVersion` to 7 bits
   * This bug was caught by Clippy!
 
-### 0.2.0
+### Changed
+
+- Add MSRV (minimum supported Rust version)
+
+## [0.2.0]
+
+### Added
+
+- `Header::cmdline()`
+- Warning about unreliable OS versioning
+
+### Changed
 
 - Combine `HeaderV0`'s cmdline fields
-- Add `Header::cmdline()`
-- Add warning about unreliable OS versioning
 
-### 0.1.2
+## [0.1.2]
+
+### Added
 
 - Re-export `binrw`'s `BufReader`
-- Add example
-- Add description to `unpack_bootimg`'s Cargo.toml
+- Example
+- Description to `unpack_bootimg`'s Cargo.toml
 - Expose `VendorHeaderV4`
 
-### 0.1.1
+## [0.1.1]
+
+### Fixed
 
 - Handle unknown header version properly instead of panicking
 
-### 0.1.0
+## 0.1.0
+
+### Added
 
 - Initial release
+
+[unreleased]: https://github.com/axelkar/abootimg-oxide/compare/0.3.1...HEAD
+[0.3.1]: https://github.com/axelkar/abootimg-oxide/compare/0.3.0...0.3.1
+[0.3.0]: https://github.com/axelkar/abootimg-oxide/compare/0.2.3...0.3.0
+[0.2.3]: https://github.com/axelkar/abootimg-oxide/compare/0.2.2...0.2.3
+[0.2.2]: https://github.com/axelkar/abootimg-oxide/compare/0.2.1...0.2.2
+[0.2.1]: https://github.com/axelkar/abootimg-oxide/compare/0.2.0...0.2.1
+[0.2.0]: https://github.com/axelkar/abootimg-oxide/compare/0.1.2...0.2.0
+[0.1.2]: https://github.com/axelkar/abootimg-oxide/compare/0.1.1...0.1.2
+[0.1.1]: https://github.com/axelkar/abootimg-oxide/releases/tag/0.1.1
